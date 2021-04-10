@@ -46,7 +46,7 @@ case class QualifiedName(parts: Name*) {
 }
 
 object QualifiedName {
-  implicit def fromName(name: Name) = QualifiedName(name)
+  given Conversion[Name, QualifiedName] = QualifiedName.apply(_)
 
   val Root = QualifiedName()
   val scala = Root dot Name.scala

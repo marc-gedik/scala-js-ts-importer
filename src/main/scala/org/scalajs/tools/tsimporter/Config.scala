@@ -1,26 +1,26 @@
 package org.scalajs.tools.tsimporter
 
 case class Config(
-    inputFileName: String = "",
-    outputFileName: String = "",
-    packageName: String = "importedjs"
+    inputFileName: String,
+    outputFileName: String,
+    packageName: String
 )
 
 object Config {
-  final val parser = new scopt.OptionParser[Config]("scalajs-ts-importer") {
-    arg[String]("<input.d.ts>").required()
-      .text("TypeScript type definition file to be read")
-      .action((i, config) => config.copy(inputFileName = i))
+  final val defaultPackageName = "importedjs"
+  final val usage = s"""
+    Usage: sbt 'run <input.d.ts> <output.scala> [package]'
 
-    arg[String]("<output.scala>").required()
-      .text("Output Scala.js file")
-      .action((o, config) => config.copy(outputFileName = o))
-
-    arg[String]("<package>").optional()
-      .text("Package name for the output (defaults to \"importedjs\")")
-      .action((pn, config) => config.copy(packageName = pn))
-
-    help("help").abbr("h")
-      .text("prints help")
+      <input.d.ts>    TypeScript type definition file to be read
+      <output.scala>  Output Scala.js file
+      [package]       Package name for the output (defaults to "$defaultPackageName")
+   """
+  final def parse(args: Array[String]): Option[Config] = {
+    if(args.length >= 2) {
+      Some(Config(args(0), args(1), args.lift(2).getOrElse(defaultPackageName)))
+    } else {
+      println(usage)
+      None
+    }
   }
 }

@@ -72,7 +72,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     "{" ~> rep(moduleElementDecl) <~ "}" ^^ (_.flatten)
 
   lazy val topLevelExportDecl: Parser[DeclTree] =
-    "=" ~> identifier <~ ";" ^^ TopLevelExportDecl
+    "=" ~> identifier <~ ";" ^^ TopLevelExportDecl.apply
 
   lazy val moduleElementDecl: Parser[Option[DeclTree]] = (
       "export" ~> (
@@ -90,19 +90,19 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   )
 
   lazy val ambientVarDecl: Parser[DeclTree] =
-    "var" ~> identifier ~ optTypeAnnotation <~ opt(";") ^^ VarDecl
+    "var" ~> identifier ~ optTypeAnnotation <~ opt(";") ^^ VarDecl.apply
 
   lazy val ambientLetDecl: Parser[DeclTree] =
-    "let" ~> identifier ~ optTypeAnnotation <~ opt(";") ^^ LetDecl
+    "let" ~> identifier ~ optTypeAnnotation <~ opt(";") ^^ LetDecl.apply
 
   lazy val ambientConstDecl: Parser[DeclTree] =
-    "const" ~> identifier ~ optTypeAnnotation <~ opt(";") ^^ ConstDecl
+    "const" ~> identifier ~ optTypeAnnotation <~ opt(";") ^^ ConstDecl.apply
 
   lazy val ambientFunctionDecl: Parser[DeclTree] =
-    "function" ~> identifier ~ functionSignature <~ opt(";") ^^ FunctionDecl
+    "function" ~> identifier ~ functionSignature <~ opt(";") ^^ FunctionDecl.apply
 
   lazy val ambientEnumDecl: Parser[DeclTree] =
-    "enum" ~> typeName ~ ("{" ~> ambientEnumBody <~ "}") ^^ EnumDecl
+    "enum" ~> typeName ~ ("{" ~> ambientEnumBody <~ "}") ^^ EnumDecl.apply
 
   lazy val ambientEnumBody: Parser[List[Ident]] =
     repsep(identifier <~ opt("=" ~ (numericLit | stringLit) ), ",") <~ opt(",")
@@ -113,10 +113,10 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     }
 
   lazy val ambientInterfaceDecl: Parser[DeclTree] =
-    "interface" ~> typeName ~ tparams ~ intfInheritance ~ memberBlock <~ opt(";") ^^ InterfaceDecl
+    "interface" ~> typeName ~ tparams ~ intfInheritance ~ memberBlock <~ opt(";") ^^ InterfaceDecl.apply
 
   lazy val typeAliasDecl: Parser[DeclTree] =
-    "type" ~> typeName ~ tparams ~ ("=" ~> typeDesc) <~ opt(";") ^^ TypeAliasDecl
+    "type" ~> typeName ~ tparams ~ ("=" ~> typeDesc) <~ opt(";") ^^ TypeAliasDecl.apply
 
   lazy val importDecl: Parser[DeclTree] =
     "import" ~> opt(
@@ -139,7 +139,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   )
 
   lazy val typeParam: Parser[TypeParam] =
-    typeName ~ opt("extends" ~> typeDesc) <~ opt("=" ~> typeDesc) ^^ TypeParam
+    typeName ~ opt("extends" ~> typeDesc) <~ opt("=" ~> typeDesc) ^^ TypeParam.apply
 
   lazy val classParent =
     opt("extends" ~> typeRef)
@@ -155,7 +155,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   )
 
   lazy val functionSignature =
-    tparams ~ ("(" ~> repsep(functionParam, ",") <~ opt(",") <~ ")") ~ optResultType ^^ FunSignature
+    tparams ~ ("(" ~> repsep(functionParam, ",") <~ opt(",") <~ ")") ~ optResultType ^^ FunSignature.apply
 
   lazy val functionParam =
     repeatedParamMarker ~ identifier ~ optionalMarker ~ optParamType ^^ {
@@ -180,9 +180,9 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
 
   lazy val paramType: Parser[TypeTree] = (
       typeDesc
-    | stringLiteral ^^ ConstantType
-    | numberLiteral ^^ ConstantType
-    | booleanLiteral ^^ ConstantType
+    | stringLiteral ^^ ConstantType.apply
+    | numberLiteral ^^ ConstantType.apply
+    | booleanLiteral ^^ ConstantType.apply
   )
 
   lazy val optResultType =
@@ -204,12 +204,12 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
 
   lazy val unionTypeDesc: Parser[TypeTree] =
     opt("|") ~> rep1sep(intersectionTypeDesc, "|") ^^ {
-      _.reduceLeft(UnionType)
+      _.reduceLeft(UnionType.apply)
     }
 
   lazy val intersectionTypeDesc: Parser[TypeTree] =
     rep1sep(singleTypeDesc, "&") ^^ {
-      _.reduceLeft(IntersectionType)
+      _.reduceLeft(IntersectionType.apply)
     }
 
   lazy val singleTypeDesc: Parser[TypeTree] =
@@ -257,19 +257,19 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     }
 
   lazy val stringType: Parser[TypeTree] =
-    stringLiteral ^^ ConstantType
+    stringLiteral ^^ ConstantType.apply
 
   lazy val numberType: Parser[TypeTree] =
-    numberLiteral ^^ ConstantType
+    numberLiteral ^^ ConstantType.apply
 
   lazy val booleanType: Parser[TypeTree] =
-    booleanLiteral ^^ ConstantType
+    booleanLiteral ^^ ConstantType.apply
 
   lazy val thisType: Parser[TypeTree] =
     "this" ^^^ PolymorphicThisType
 
   lazy val indexTypeQuery: Parser[TypeTree] =
-    "keyof" ~> typeDesc ^^ IndexedQueryType
+    "keyof" ~> typeDesc ^^ IndexedQueryType.apply
 
   lazy val typeQuery: Parser[TypeTree] =
     "typeof" ~> rep1sep(ident, ".") ^^ { parts =>
@@ -282,7 +282,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     }
 
   lazy val objectType: Parser[TypeTree] =
-    memberBlock ^^ ObjectType
+    memberBlock ^^ ObjectType.apply
 
   lazy val memberBlock: Parser[List[MemberTree]] =
     "{" ~> rep(typeMember <~ opt(";" | ",")) <~ "}"
@@ -291,10 +291,10 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     callMember | constructorMember | indexMember | namedMember | privateMember
 
   lazy val callMember: Parser[MemberTree] =
-    functionSignature ^^ CallMember
+    functionSignature ^^ CallMember.apply
 
   lazy val constructorMember: Parser[MemberTree] =
-    "new" ~> functionSignature ^^ ConstructorMember
+    "new" ~> functionSignature ^^ ConstructorMember.apply
 
   lazy val indexMember: Parser[MemberTree] =
     modifiers ~ ("[" ~> identifier ~ typeAnnotation <~ "]") ~ typeAnnotation ^^ {
@@ -325,10 +325,10 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   )
 
   lazy val identifier =
-    identifierName ^^ Ident
+    identifierName ^^ Ident.apply
 
   lazy val typeName =
-    identifierName ^^ TypeName
+    identifierName ^^ TypeName.apply
 
   lazy val identifierName = accept("IdentifierName", {
     case lexical.Identifier(chars)                                  => chars
@@ -339,7 +339,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     identifier | stringLiteral | numberLiteral
 
   lazy val stringLiteral: Parser[StringLiteral] =
-    stringLit ^^ StringLiteral
+    stringLit ^^ StringLiteral.apply
 
   lazy val numberLiteral: Parser[NumberLiteral] =
     numericLit ^^ { s =>

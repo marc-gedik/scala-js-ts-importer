@@ -6,16 +6,17 @@
 package org.scalajs.tools.tsimporter.sc
 
 import java.io.PrintWriter
+
 import org.scalajs.tools.tsimporter.Trees.Modifier
 
 class Printer(private val output: PrintWriter, outputPackage: String) {
   import Printer._
 
-  private implicit val self = this
+  given self: Printer = this
 
   private var currentJSNamespace = ""
 
-  def printSymbol(sym: Symbol) {
+  def printSymbol(sym: Symbol): Unit = {
     val name = sym.name
     sym match {
       case comment: CommentSymbol =>
@@ -55,7 +56,7 @@ class Printer(private val output: PrintWriter, outputPackage: String) {
 
           if (!packageObjectMembers.isEmpty) {
             val packageObjectName =
-              Name(thisPackage.name.head.toUpper + thisPackage.name.tail)
+              Name(s"${thisPackage.name.head.toUpper}${thisPackage.name.tail}")
 
             pln"";
             if (currentJSNamespace.isEmpty) {
@@ -104,7 +105,7 @@ class Printer(private val output: PrintWriter, outputPackage: String) {
           p"[${sym.tparams}]"
 
         {
-          implicit val withSep = ListElemSeparator.WithKeyword
+          given withSep: ListElemSeparator = ListElemSeparator.WithKeyword
           pln"$constructorStr extends $parents {"
         }
 
@@ -180,7 +181,7 @@ class Printer(private val output: PrintWriter, outputPackage: String) {
     }
   }
 
-  private def printMemberDecls(owner: ContainerSymbol) {
+  private def printMemberDecls(owner: ContainerSymbol) = {
     val (constructors, others) =
       owner.members.toList.partition(_.name == Name.CONSTRUCTOR)
     for (sym <- constructors ++ others)
@@ -199,17 +200,17 @@ class Printer(private val output: PrintWriter, outputPackage: String) {
     }
   }
 
-  def printTypeRef(tpe: TypeRef) {
+  def printTypeRef(tpe: TypeRef): Unit = {
     tpe match {
       case TypeRef(typeName, Nil) =>
         p"$typeName"
 
       case TypeRef.Union(types) =>
-        implicit val withPipe = ListElemSeparator.Pipe
+        given withPipe: ListElemSeparator = ListElemSeparator.Pipe
         p"$types"
 
       case TypeRef.Intersection(types) =>
-        implicit val withWith = ListElemSeparator.WithKeyword
+        given withWith: ListElemSeparator = ListElemSeparator.WithKeyword
         p"$types"
 
       case TypeRef.This =>
@@ -236,7 +237,7 @@ class Printer(private val output: PrintWriter, outputPackage: String) {
     }
   }
 
-  private def print(x: Any) {
+  private def print(x: Any) = {
     x match {
       case x: Symbol => printSymbol(x)
       case x: TypeRef => printTypeRef(x)
@@ -252,17 +253,16 @@ class Printer(private val output: PrintWriter, outputPackage: String) {
 }
 
 object Printer {
-  private class ListElemSeparator(val s: String) extends AnyVal
+  class ListElemSeparator(val s: String) extends AnyVal
 
-  private object ListElemSeparator {
+  object ListElemSeparator {
     val Comma = new ListElemSeparator(", ")
     val Pipe = new ListElemSeparator(" | ")
     val WithKeyword = new ListElemSeparator(" with ")
   }
 
-  private implicit class OutputHelper(val sc: StringContext) extends AnyVal {
-    def p(args: Any*)(implicit printer: Printer,
-        sep: ListElemSeparator = ListElemSeparator.Comma) {
+  extension(sc: StringContext) {
+    def p(args: Any*)(using printer: Printer, sep: ListElemSeparator = ListElemSeparator.Comma): Unit = {
       val strings = sc.parts.iterator
       val expressions = args.iterator
 
@@ -270,7 +270,7 @@ object Printer {
       output.print(strings.next())
       while (strings.hasNext) {
         expressions.next() match {
-          case seq: Seq[_] =>
+          case seq: Iterable[_] =>
             val iter = seq.iterator
             if (iter.hasNext) {
               printer.print(iter.next())
@@ -287,8 +287,7 @@ object Printer {
       }
     }
 
-    def pln(args: Any*)(implicit printer: Printer,
-        sep: ListElemSeparator = ListElemSeparator.Comma) {
+    def pln(args: Any*)(using printer: Printer, sep: ListElemSeparator = ListElemSeparator.Comma): Unit = {
       p(args:_*)
       printer.output.println()
     }

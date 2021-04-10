@@ -1,10 +1,10 @@
 package org.scalajs.tools.tsimporter
 
 import java.io.{ File, FilenameFilter }
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 import scala.io.Source
 
-class ImporterSpec extends FunSpec {
+class ImporterSpec extends AnyFunSpec {
   describe("Main.main") {
     val inputDirectory = new File("samples")
 

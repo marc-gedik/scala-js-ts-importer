@@ -5,6 +5,7 @@
 
 package org.scalajs.tools.tsimporter
 
+import scala.language.implicitConversions
 import Trees.{ TypeRef => TypeRefTree, _ }
 import sc._
 
@@ -16,7 +17,7 @@ class Importer(val output: java.io.PrintWriter) {
   import Importer._
 
   /** Entry point */
-  def apply(declarations: List[DeclTree], outputPackage: String) {
+  def apply(declarations: List[DeclTree], outputPackage: String) = {
     val rootPackage = new PackageSymbol(Name.EMPTY)
 
     for (declaration <- declarations)
@@ -25,7 +26,7 @@ class Importer(val output: java.io.PrintWriter) {
     new Printer(output, outputPackage).printSymbol(rootPackage)
   }
 
-  private def processDecl(owner: ContainerSymbol, declaration: DeclTree) {
+  private def processDecl(owner: ContainerSymbol, declaration: DeclTree): Unit = {
     declaration match {
       case ModuleDecl(PropertyNameName(name), innerDecls) =>
         assert(owner.isInstanceOf[PackageSymbol],
@@ -128,7 +129,7 @@ class Importer(val output: java.io.PrintWriter) {
   }
 
   private def processMembersDecls(enclosing: ContainerSymbol,
-      owner: ContainerSymbol, members: List[MemberTree]) {
+      owner: ContainerSymbol, members: List[MemberTree]) : Unit = {
 
     val OwnerName = owner.name
 
@@ -202,7 +203,7 @@ class Importer(val output: java.io.PrintWriter) {
   }
 
   private def processPropertyDecl(enclosing: ContainerSymbol, owner: ContainerSymbol, name: Name,
-      tpe: TypeTree, modifiers: Modifiers, protectName: Boolean = true) {
+      tpe: TypeTree, modifiers: Modifiers, protectName: Boolean = true) = {
     if (name.name != "prototype") {
       tpe match {
         case ObjectType(members) if members.forall(_.isInstanceOf[CallMember]) =>
@@ -226,7 +227,7 @@ class Importer(val output: java.io.PrintWriter) {
   }
 
   private def processDefDecl(owner: ContainerSymbol, name: Name,
-      signature: FunSignature, modifiers: Modifiers, protectName: Boolean = true) {
+      signature: FunSignature, modifiers: Modifiers, protectName: Boolean = true) = {
     val sym = owner.newMethod(name, modifiers)
     if (protectName)
       sym.protectName()

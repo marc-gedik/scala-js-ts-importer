@@ -14,8 +14,8 @@ import parser.TSDefParser
 
 /** Entry point for the TypeScript importer of Scala.js */
 object Main {
-  def main(args: Array[String]) {
-    for (config <- Config.parser.parse(args, Config())) {
+  def main(args: Array[String]) = {
+    for (config <- Config.parse(args)) {
       val outputPackage = config.packageName
 
       importTsFile(config.inputFileName, config.outputFileName, outputPackage) match {
@@ -36,7 +36,7 @@ object Main {
         val output = new PrintWriter(new BufferedWriter(new FileWriter(outputFileName)))
         try {
           process(definitions, output, outputPackage)
-          Right(())
+          ()
         } finally {
           output.close()
         }
@@ -47,7 +47,7 @@ object Main {
   }
 
   private def process(definitions: List[DeclTree], output: PrintWriter,
-      outputPackage: String) {
+      outputPackage: String) = {
     new Importer(output)(definitions, outputPackage)
   }
 

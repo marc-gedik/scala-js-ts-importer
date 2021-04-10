@@ -43,12 +43,12 @@ class TSDefLexical extends Lexical with StdTokens with ImplicitConversions {
           }
       )
     | opt('-')  ~ stringOf1(digit) ~ opt(stringOf1('.', digit)) ^^ {
-        case sign ~ part1 ~ part2 => sign.getOrElse("") + part1 + (part2.getOrElse(""))
+        case sign ~ part1 ~ part2 => s"""${sign.getOrElse("")}$part1${part2.getOrElse("")}"""
       }
-  ) ^^ NumericLit
+  ) ^^ NumericLit.apply
 
   def stringLiteral =
-    (quoted('\"') | quoted('\'')) ^^ StringLit
+    (quoted('\"') | quoted('\'')) ^^ StringLit.apply
 
   def quoted(quoteChar: Char) =
     quoteChar ~> stringOf(inQuoteChar(quoteChar)) <~ quoteChar
