@@ -28,6 +28,7 @@ object Keyof extends js.Object {
   type P3 = js.Any
   type P4 = js.Any
   type P5 = js.Any
+  type P6 = String
 }
 
 }

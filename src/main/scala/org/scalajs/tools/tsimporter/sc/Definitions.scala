@@ -10,7 +10,7 @@ import scala.language.implicitConversions
 import scala.collection.mutable.ListBuffer
 
 import org.scalajs.tools.tsimporter.Utils
-import org.scalajs.tools.tsimporter.Trees.{ Modifier, Modifiers }
+import org.scalajs.tools.tsimporter.Trees.{ Modifier, Modifiers, TypeName }
 
 case class Name(name: String) {
   override def toString() = Utils.scalaEscape(name)
@@ -386,6 +386,16 @@ object TypeRef {
         Some(underlying)
 
       case _ => None
+    }
+  }
+
+  object Array {
+    def unapply(typeRef: TypeRef) = typeRef match {
+      case TypeRef(QualifiedName(o), List(underlying)) =>
+        println(o)
+        Some(underlying)
+
+      case o => None
     }
   }
 }

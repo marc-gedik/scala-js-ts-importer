@@ -387,14 +387,4 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   def typeNameToTypeRef(name: String): BaseTypeRef =
     if (isCoreTypeName(name)) CoreType(name)
     else TypeName(name)
-
-  object ArrayType {
-    def apply(elem: TypeTree): TypeRef =
-      TypeRef(TypeName("Array"), List(elem))
-
-    def unapply(typeRef: TypeRef): Option[TypeTree] = typeRef match {
-      case TypeRef(TypeName("Array"), List(elem)) => Some(elem)
-      case _ => None
-    }
-  }
 }

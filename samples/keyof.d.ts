@@ -15,9 +15,7 @@ type P2 = Thing["width" | "height"];  // number
 type P3 = Thing["name" | "inStock"];  // string | boolean
 type P4 = string["charAt"];  // (pos: number) => string
 type P5 = string[]["push"];  // (...items: string[]) => number
-
-// following line will work after merged https://github.com/sjrd/scala-js-ts-importer/pull/47
-// type P6 = string[][0];  // string
+type P6 = string[][0];  // string
 
 // extract example from https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/lodash/index.d.ts
 interface LoDashStatic {

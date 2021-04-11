@@ -172,6 +172,16 @@ object Trees {
 
   case class RepeatedType(underlying: TypeTree) extends TypeTree
 
+  object ArrayType {
+    def apply(elem: TypeTree): TypeRef =
+      TypeRef(TypeName("Array"), List(elem))
+
+    def unapply(typeRef: TypeRef): Option[TypeTree] = typeRef match {
+      case TypeRef(TypeName("Array"), List(elem)) => Some(elem)
+      case _ => None
+    }
+  }
+
   case class IndexedQueryType(underlying: TypeTree) extends TypeTree
   case class IndexedAccessType(objectType: TypeTree, name: TypeTree) extends TypeTree
 

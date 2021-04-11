@@ -372,6 +372,9 @@ class Importer(val output: java.io.PrintWriter) {
       case PolymorphicThisType =>
         TypeRef.This
 
+      case IndexedAccessType(ArrayType(elem), ConstantType(IntLiteral(_))) =>
+        typeToScala(elem)
+
       case _ =>
         // ???
         TypeRef.Any
