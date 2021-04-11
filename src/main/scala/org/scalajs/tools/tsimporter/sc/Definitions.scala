@@ -321,12 +321,19 @@ object TypeRef {
 
   val ScalaAny = TypeRef(scala dot Name("Any"))
 
+  private def unescapedName(string: String) = new Name(string) {
+    override def toString(): String = string
+  }
   val Any = TypeRef(scala_js dot Name("Any"))
   val Dynamic = TypeRef(scala_js dot Name("Dynamic"))
   val Double = TypeRef(scala dot Name("Double"))
+  def DoubleLiteral(lit: Double) = TypeRef(unescapedName(s"$lit"))
   val Int = TypeRef(scala dot Name("Int"))
+  def IntLiteral(lit: Int) = TypeRef(unescapedName(s"$lit"))
   val Boolean = TypeRef(scala dot Name("Boolean"))
+  def BooleanLiteral(lit: Boolean) = TypeRef(unescapedName(s"$lit"))
   val String = TypeRef(java_lang dot Name("String"))
+  def StringLiteral(lit: String) = TypeRef(unescapedName(s""""$lit""""))
   val Object = TypeRef(scala_js dot Name("Object"))
   val Function = TypeRef(scala_js dot Name("Function"))
   val Unit = TypeRef(scala dot Name("Unit"))

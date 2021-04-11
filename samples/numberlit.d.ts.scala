@@ -9,15 +9,15 @@ package numberlit {
 
 @js.native
 trait Machine extends js.Object {
-  var state: Int = js.native
-  def setState(flag: Int | Boolean): Int = js.native
+  var state: 0 | 1 = js.native
+  def setState(flag: 0 | 1 | Boolean): 0 | 1 = js.native
 }
 
 @js.native
 @JSGlobal("numberlit")
 object Numberlit extends js.Object {
-  type HttpStatuscode = Int
-  def floating(prob: Double): Double | Int = js.native
+  type HttpStatuscode = 200 | 404 | 503
+  def floating(prob: 0.1 | 0.5 | 1.0): 0.0 | 1 = js.native
 }
 
 }

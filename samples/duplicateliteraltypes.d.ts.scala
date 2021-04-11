@@ -9,7 +9,9 @@ package duplicateliteraltypes {
 
 @js.native
 trait duplicateliteraltypes extends js.Object {
-  def duplicate(input: Boolean): Unit = js.native
+  def duplicate(input: true): Unit = js.native
+  def duplicate(input: false): Unit = js.native
+  def duplicate(input: "hello"): Unit = js.native
   def duplicate(input: String): Unit = js.native
 }
 
