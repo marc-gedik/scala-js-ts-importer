@@ -37,7 +37,6 @@ class Printer(private val output: PrintWriter, outputPackage: String) {
           pln"";
           pln"import scala.scalajs.js"
           pln"import js.annotation._"
-          pln"import js.|"
         }
 
         val oldJSNamespace = currentJSNamespace
