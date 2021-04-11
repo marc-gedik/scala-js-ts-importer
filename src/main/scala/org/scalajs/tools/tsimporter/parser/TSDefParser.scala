@@ -55,9 +55,13 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   lazy val ambientDeclaration: Parser[Option[DeclTree]] = ((
       opt("declare") ~> opt("export") ~> moduleElementDecl1
     | opt("export") ~> opt("declare") ~> moduleElementDecl1
+    | opt("export") ~> opt("default") ~> moduleElementDecl1
+    | opt("export") ~> ambientInterfaceDecl
   ).map(Some(_))
     | "export" ~> lexical.Identifier("as") ~> "namespace" ~> identifier <~ opt(";") ^^^ None
     | "export" ~> "default" ~> identifier <~ opt(";") ^^^ None
+    | "export" ~> "{" ~ opt(importIdentifierSeq) ~ "}" <~ opt(lexical.Identifier("from") ~ stringLiteral) <~  opt(";") ^^^ None
+    | "export" ~> "*" ~> lexical.Identifier("from") ~ stringLiteral <~ opt(";") ^^^ None
   )
 
   lazy val ambientModuleDecl: Parser[DeclTree] =
@@ -102,7 +106,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     "function" ~> identifier ~ functionSignature <~ opt(";") ^^ FunctionDecl.apply
 
   lazy val ambientEnumDecl: Parser[DeclTree] =
-    "enum" ~> typeName ~ ("{" ~> ambientEnumBody <~ "}") ^^ EnumDecl.apply
+    opt("const") ~> "enum" ~> typeName ~ ("{" ~> ambientEnumBody <~ "}") ^^ EnumDecl.apply
 
   lazy val ambientEnumBody: Parser[List[Ident]] =
     repsep(identifier <~ opt("=" ~ (numericLit | stringLit) ), ",") <~ opt(",")
@@ -120,15 +124,17 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
 
   lazy val importDecl: Parser[DeclTree] =
     "import" ~> opt(
-      (
-          identifier
-        |  "{" ~ importIdentifierSeq ~ "}"
-        | "*" ~ lexical.Identifier("as") ~ identifier
+      repsep(
+        identifier
+          | "{" ~ importIdentifierSeq ~ "}"
+          | "*" ~ lexical.Identifier("as") ~ identifier,
+        ","
       ) ~ lexical.Identifier("from")
-    ) ~ stringLiteral <~ ";" ^^^ ImportDecl
+    ) ~ stringLiteral <~ opt(";") ^^^ ImportDecl
+
 
   lazy val importIdentifierSeq =
-    rep1sep(identifier ~ opt(lexical.Identifier("as") ~ identifier), ",")
+    rep1sep(identifier ~ opt(lexical.Identifier("as") ~ identifier), ",") <~ opt(",")
 
   lazy val abstractModifier =
     opt(lexical.Identifier("abstract")) ^^ (_.isDefined)
@@ -190,6 +196,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
 
   lazy val resultType: Parser[TypeTree] = (
       ("void" ^^^ TypeRef(CoreType("void")))
+    | typeGuard
     | typeDesc
   )
 
@@ -215,7 +222,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   lazy val singleTypeDesc: Parser[TypeTree] =
     baseTypeDesc ~ rep("[" ~> opt(typeDesc) <~ "]") ^^ {
       case base ~ arrayDims =>
-        (base /: arrayDims) {
+        arrayDims.foldLeft(base) {
           case (elem, None) => ArrayType(elem)
           case (elem, Some(index)) => IndexedAccessType(elem, index)
         }
@@ -224,6 +231,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   lazy val baseTypeDesc: Parser[TypeTree] = (
       typeRef
     | objectType
+    | objectIn
     | functionType
     | stringType
     | numberType
@@ -233,7 +241,11 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     | thisType
     | indexTypeQuery
     | "(" ~> typeDesc <~ ")"
+    | conditionalTypes
   )
+
+  lazy val typeGuard: Parser[TypeTree] =
+    identifier ~ lexical.Identifier("is") ~> singleTypeDesc ^^^ TypeGuard
 
   lazy val typeRef: Parser[TypeRef] =
     baseTypeRef ~ opt(typeArgs) ^^ {
@@ -271,6 +283,14 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   lazy val indexTypeQuery: Parser[TypeTree] =
     "keyof" ~> typeDesc ^^ IndexedQueryType.apply
 
+  // TODO not only "typeName extends" can also be "typeTree extends"
+  // TODO infer in extendsType
+  lazy val conditionalTypes: Parser[TypeTree] =
+    typeName  ~ "extends" ~ typeDesc ~ "?" ~ typeDesc ~ ":" ~ typeDesc ^^ {
+      case typeValue ~ _ ~ extendsType ~ _ ~ typeTreeTrue ~ _ ~ typeTreeFalse =>
+        ConditionalTypes(typeValue, extendsType, typeTreeTrue, typeTreeFalse)
+    }
+
   lazy val typeQuery: Parser[TypeTree] =
     "typeof" ~> rep1sep(ident, ".") ^^ { parts =>
       TypeQuery(QualifiedIdent(parts.init.map(Ident), Ident(parts.last)))
@@ -279,6 +299,11 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   lazy val tupleType: Parser[TypeTree] =
     "[" ~> rep1sep(typeDesc, ",") <~ "]" ^^ { parts =>
       TupleType(parts)
+    }
+
+  lazy val objectIn: Parser[TypeTree] =
+    "{" ~> (("[" ~> identifier ~ "in" ~ baseTypeDesc <~ "]") ~ optionalMarker ~ typeAnnotation) <~ "}" ^^ {
+      case key ~ _ ~ typeTree ~ optional ~ valueType => ObjectInType(key, typeTree, optional, valueType)
     }
 
   lazy val objectType: Parser[TypeTree] =

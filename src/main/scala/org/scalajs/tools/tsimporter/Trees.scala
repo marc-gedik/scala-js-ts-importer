@@ -158,6 +158,8 @@ object Trees {
 
   case class ObjectType(members: List[MemberTree]) extends TypeTree
 
+  case class ObjectInType(key: Ident, in: TypeTree, optional: Boolean, underlying: TypeTree) extends TypeTree
+
   case class FunctionType(signature: FunSignature) extends TypeTree
 
   case class UnionType(left: TypeTree, right: TypeTree) extends TypeTree
@@ -174,6 +176,10 @@ object Trees {
   case class IndexedAccessType(objectType: TypeTree, name: TypeTree) extends TypeTree
 
   object PolymorphicThisType extends TypeTree
+
+  object TypeGuard extends TypeTree
+
+  case class ConditionalTypes(typeValue: TypeName, extendsType: TypeTree, typeTreeTrue: TypeTree, typeTreeFalse: TypeTree) extends TypeTree
 
   // Type members
 
