@@ -375,6 +375,13 @@ class Importer(val output: java.io.PrintWriter) {
       case IndexedAccessType(ArrayType(elem), ConstantType(IntLiteral(_))) =>
         typeToScala(elem)
 
+      case ConditionalTypes(typeValue, extendsType, typeTreeTrue, typeTreeFalse) =>
+        val tpe = typeToScala(typeValue)
+        val extendsTpe = typeToScala(extendsType)
+        val typeTpeTrue = typeToScala(typeTreeTrue)
+        val typeTpeFalse = typeToScala(typeTreeFalse)
+        TypeRef.TypeMatchCase(tpe, List(extendsTpe -> typeTpeTrue, Wildcard(None) -> typeTpeFalse))
+
       case _ =>
         // ???
         TypeRef.Any

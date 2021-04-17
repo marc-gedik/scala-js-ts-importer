@@ -229,7 +229,8 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     }
 
   lazy val baseTypeDesc: Parser[TypeTree] = (
-      typeRef
+      conditionalTypes
+    | typeRef
     | objectType
     | objectIn
     | functionType
@@ -241,7 +242,6 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     | thisType
     | indexTypeQuery
     | "(" ~> typeDesc <~ ")"
-    | conditionalTypes
   )
 
   lazy val typeGuard: Parser[TypeTree] =
@@ -288,7 +288,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
   lazy val conditionalTypes: Parser[TypeTree] =
     typeName  ~ "extends" ~ typeDesc ~ "?" ~ typeDesc ~ ":" ~ typeDesc ^^ {
       case typeValue ~ _ ~ extendsType ~ _ ~ typeTreeTrue ~ _ ~ typeTreeFalse =>
-        ConditionalTypes(typeValue, extendsType, typeTreeTrue, typeTreeFalse)
+        ConditionalTypes(TypeRef(typeValue), extendsType, typeTreeTrue, typeTreeFalse)
     }
 
   lazy val typeQuery: Parser[TypeTree] =

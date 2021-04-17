@@ -189,7 +189,7 @@ object Trees {
 
   object TypeGuard extends TypeTree
 
-  case class ConditionalTypes(typeValue: TypeName, extendsType: TypeTree, typeTreeTrue: TypeTree, typeTreeFalse: TypeTree) extends TypeTree
+  case class ConditionalTypes(typeValue: TypeTree, extendsType: TypeTree, typeTreeTrue: TypeTree, typeTreeFalse: TypeTree) extends TypeTree
 
   // Type members
 

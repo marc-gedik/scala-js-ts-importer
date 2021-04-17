@@ -221,8 +221,17 @@ class Printer(private val output: PrintWriter, outputPackage: String) {
       case TypeRef.Repeated(underlying) =>
         p"$underlying*"
 
+      case TypeRef.TypeMatchCase(typeValue, cases) =>
+        given withWith: ListElemSeparator = ListElemSeparator.Semicolon
+        p"$typeValue match { $cases }"
+
+
+      case TypeRef.TypeCase(ifMatches, returnValue) =>
+        p"case $ifMatches => $returnValue"
+
       case TypeRef(typeName, targs) =>
         p"$typeName[$targs]"
+
     }
   }
 
@@ -258,6 +267,7 @@ object Printer {
     val Comma = new ListElemSeparator(", ")
     val Pipe = new ListElemSeparator(" | ")
     val WithKeyword = new ListElemSeparator(" with ")
+    val Semicolon = new ListElemSeparator("; ")
   }
 
   extension(sc: StringContext) {

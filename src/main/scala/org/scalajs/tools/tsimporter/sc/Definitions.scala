@@ -31,6 +31,8 @@ object Name {
   val SINGLETON = Name("<typeof>")
   val THIS = Name("<this>")
   val INTERSECTION = Name("<with>")
+  val CASE = Name("<case>")
+  val MATCH = Name("<match>")
 }
 
 case class QualifiedName(parts: Name*) {
@@ -396,6 +398,29 @@ object TypeRef {
         Some(underlying)
 
       case o => None
+    }
+  }
+
+  object TypeCase {
+    def apply(ifMatches: TypeRefOrWildcard, returnValue: TypeRef): TypeRef =
+      TypeRef(QualifiedName(Name.CASE), List(ifMatches, returnValue))
+
+    def unapply(typeRef: TypeRef) = typeRef match {
+      case TypeRef(QualifiedName(Name.CASE), List(ifMatches, returnValue)) =>
+        Some((ifMatches, returnValue))
+      case _ => None
+    }
+  }
+
+  object TypeMatchCase {
+    def apply(typeValue: TypeRef, cases: List[(TypeRefOrWildcard, TypeRef)]): TypeRef =
+      TypeRef(QualifiedName(Name.MATCH), typeValue :: cases.map(TypeCase.apply))
+
+    def unapply(typeRef: TypeRef) = typeRef match {
+      case TypeRef(QualifiedName(Name.MATCH), typeValue :: cases) =>
+        Some((typeValue, cases))
+
+      case _ => None
     }
   }
 }
