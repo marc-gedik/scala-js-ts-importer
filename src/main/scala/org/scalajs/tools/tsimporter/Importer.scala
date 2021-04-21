@@ -16,6 +16,7 @@ import sc._
 class Importer(val output: java.io.PrintWriter) {
   import Importer._
 
+  given env: Env = Env.Empty
   /** Entry point */
   def apply(declarations: List[DeclTree], outputPackage: String) = {
     val rootPackage = new PackageSymbol(Name.EMPTY)
@@ -256,10 +257,11 @@ class Importer(val output: java.io.PrintWriter) {
       new TypeParamSymbol(tparam, upperBound map typeToScala)
   }
 
-  private def typeToScala(tpe: TypeTree): TypeRef =
-    typeToScala(tpe, false)
+  private def typeToScala(tpe: TypeTree)(using env: Env): TypeRef = {
+    typeToScala(tpe, anyAsDynamic = false)
+  }
 
-  private def typeToScala(tpe: TypeTree, anyAsDynamic: Boolean): TypeRef = {
+  private def typeToScala(tpe: TypeTree, anyAsDynamic: Boolean)(using env: Env): TypeRef = {
     tpe match {
       case TypeRefTree(tpe: CoreType, Nil) =>
         coreTypeToScala(tpe, anyAsDynamic)
@@ -285,7 +287,7 @@ class Importer(val output: java.io.PrintWriter) {
           case TypeName("ArrayBuffer") => QualifiedName.ArrayBuffer
           case TypeName("ArrayBufferView") => QualifiedName.ArrayBufferView
           case TypeName("DataView") => QualifiedName.DataView
-          case TypeNameName(name) => QualifiedName(name)
+          case TypeNameName(Name(name)) => QualifiedName(Name(env.get(name)))
           case QualifiedTypeName(qualifier, TypeNameName(name)) =>
             val qual1 = qualifier map (x => Name(x.name))
             QualifiedName((qual1 :+ name): _*)
@@ -376,11 +378,23 @@ class Importer(val output: java.io.PrintWriter) {
         typeToScala(elem)
 
       case ConditionalTypes(typeValue, extendsType, typeTreeTrue, typeTreeFalse) =>
+        val localEnv = Env.Mutable()
+
         val tpe = typeToScala(typeValue)
-        val extendsTpe = typeToScala(extendsType)
-        val typeTpeTrue = typeToScala(typeTreeTrue)
+        val extendsTpe = typeToScala(extendsType)(using localEnv)
+        val typeTpeTrue = typeToScala(typeTreeTrue)(using localEnv)
         val typeTpeFalse = typeToScala(typeTreeFalse)
         TypeRef.TypeMatchCase(tpe, List(extendsTpe -> typeTpeTrue, Wildcard(None) -> typeTpeFalse))
+
+      case InferType(Ident(name)) =>
+        val identifier = s"inffered$name"
+        env match {
+          case Env.Empty =>
+            ???
+          case env: Env.Mutable =>
+            env += (name -> identifier)
+        }
+        TypeRef(QualifiedName(Name(identifier)))
 
       case _ =>
         // ???
@@ -435,4 +449,20 @@ object Importer {
     @inline def unapply(propName: PropertyName) =
       Some(Name(propName.name))
   }
+
+  sealed trait Env {
+    def get(name: String): String
+  }
+
+  object Env {
+    import scala.collection.mutable
+    case object Empty extends Env {
+      def get(name: String): String = name
+    }
+    case class Mutable(env: mutable.Map[String, String] = mutable.Map.empty) extends Env {
+      def get(name: String): String = env.getOrElse(name, name)
+      def +=(elem: (String, String)) = env += elem
+    }
+  }
+
 }

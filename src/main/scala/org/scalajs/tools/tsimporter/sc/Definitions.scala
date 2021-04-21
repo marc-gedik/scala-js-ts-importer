@@ -6,11 +6,10 @@
 package org.scalajs.tools.tsimporter.sc
 
 import scala.language.implicitConversions
-
 import scala.collection.mutable.ListBuffer
 
 import org.scalajs.tools.tsimporter.Utils
-import org.scalajs.tools.tsimporter.Trees.{ Modifier, Modifiers, TypeName }
+import org.scalajs.tools.tsimporter.Trees.{ Modifier, Modifiers, TypeName, TypeRef }
 
 case class Name(name: String) {
   override def toString() = Utils.scalaEscape(name)
@@ -33,6 +32,7 @@ object Name {
   val INTERSECTION = Name("<with>")
   val CASE = Name("<case>")
   val MATCH = Name("<match>")
+  val INFER = Name("<infer>")
 }
 
 case class QualifiedName(parts: Name*) {

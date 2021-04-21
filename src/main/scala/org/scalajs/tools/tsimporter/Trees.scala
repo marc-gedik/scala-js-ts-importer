@@ -191,6 +191,8 @@ object Trees {
 
   case class ConditionalTypes(typeValue: TypeTree, extendsType: TypeTree, typeTreeTrue: TypeTree, typeTreeFalse: TypeTree) extends TypeTree
 
+  case class InferType(identifier: Ident) extends TypeTree
+
   // Type members
 
   case class CallMember(signature: FunSignature) extends MemberTree

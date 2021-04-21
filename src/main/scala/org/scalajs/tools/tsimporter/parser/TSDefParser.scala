@@ -36,7 +36,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
       "public", "static", "yield",
 
       // Additional keywords of TypeScript
-      "declare", "module", "type", "namespace", "keyof"
+      "declare", "module", "type", "namespace", "keyof",  "infer"
   )
 
   lexical.delimiters ++= List(
@@ -242,6 +242,7 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     | thisType
     | indexTypeQuery
     | "(" ~> typeDesc <~ ")"
+    | inferType
   )
 
   lazy val typeGuard: Parser[TypeTree] =
@@ -284,7 +285,6 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
     "keyof" ~> typeDesc ^^ IndexedQueryType.apply
 
   // TODO not only "typeName extends" can also be "typeTree extends"
-  // TODO infer in extendsType
   lazy val conditionalTypes: Parser[TypeTree] =
     typeName  ~ "extends" ~ typeDesc ~ "?" ~ typeDesc ~ ":" ~ typeDesc ^^ {
       case typeValue ~ _ ~ extendsType ~ _ ~ typeTreeTrue ~ _ ~ typeTreeFalse =>
@@ -380,6 +380,9 @@ class TSDefParser extends StdTokenParsers with ImplicitConversions {
       "true" ^^^ BooleanLiteral(true)
     | "false" ^^^ BooleanLiteral(false)
   )
+
+  lazy val inferType: Parser[InferType] =
+    "infer" ~> identifier ^^ InferType.apply
 
   private val isCoreTypeName =
     Set("any", "void", "number", "bool", "boolean", "string", "null", "undefined", "never")
